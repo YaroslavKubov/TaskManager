@@ -1,0 +1,33 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TaskManager.Controls.TaskItemControl">
+
+    <Border BorderBrush="#CCCCCC"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="12"
+            Margin="0,5">
+
+        <Grid ColumnDefinitions="*,Auto,Auto"
+              VerticalAlignment="Center">
+
+            <TextBlock x:Name="TitleText"
+                       FontSize="16"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap"/>
+
+            <CheckBox x:Name="CompletedCheckBox"
+                      Grid.Column="1"
+                      Content="Виконано"
+                      VerticalAlignment="Center"
+                      Margin="10,0"
+                      Checked="CompletedCheckBox_Changed"
+                      Unchecked="CompletedCheckBox_Changed"/>
+
+            <Button Grid.Column="2"
+                    Content="Видалити"
+                    Click="DeleteButton_Click"/>
+
+        </Grid>
+    </Border>
+</UserControl>

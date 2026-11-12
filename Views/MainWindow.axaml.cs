@@ -1,59 +1,20 @@
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using TaskManager.Controls;
 
 namespace TaskManager.Views;
 
 public partial class MainWindow : Window
 {
-    private readonly ObservableCollection<TaskItem> _tasks = new();
+    private readonly List<TaskEntry> _tasks = new();
 
     public MainWindow()
     {
         InitializeComponent();
 
-        TasksList.ItemsSource = _tasks;
-
-        _tasks.CollectionChanged += Tasks_CollectionChanged;
-
         UpdateCounter();
-    }
-
-    private void Tasks_CollectionChanged(
-        object? sender,
-        NotifyCollectionChangedEventArgs e)
-    {
-        if (e.NewItems != null)
-        {
-            foreach (TaskItem task in e.NewItems)
-            {
-                task.PropertyChanged += Task_PropertyChanged;
-            }
-        }
-
-        if (e.OldItems != null)
-        {
-            foreach (TaskItem task in e.OldItems)
-            {
-                task.PropertyChanged -= Task_PropertyChanged;
-            }
-        }
-
-        UpdateCounter();
-    }
-
-    private void Task_PropertyChanged(
-        object? sender,
-        PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(TaskItem.IsCompleted))
-        {
-            UpdateCounter();
-        }
     }
 
     private void AddTask_Click(object? sender, RoutedEventArgs e)
@@ -69,58 +30,83 @@ public partial class MainWindow : Window
 
         ErrorText.IsVisible = false;
 
-        _tasks.Add(new TaskItem(title));
+        var taskControl = new TaskItemControl();
+        var statusBadge = new TaskStatusBadge();
+
+        taskControl.Configure(title, false);
+        statusBadge.SetStatus(false);
+
+        var row = new StackPanel
+        {
+            Spacing = 4
+        };
+
+        row.Children.Add(taskControl);
+        row.Children.Add(statusBadge);
+
+        var entry = new TaskEntry(
+            title,
+            taskControl,
+            statusBadge,
+            row
+        );
+
+        taskControl.CompletionChanged += (control, isCompleted) =>
+        {
+            entry.IsCompleted = isCompleted;
+
+            entry.StatusBadge.SetStatus(isCompleted);
+
+            UpdateCounter();
+        };
+
+        taskControl.DeleteRequested += control =>
+        {
+            _tasks.Remove(entry);
+            TasksPanel.Children.Remove(entry.Row);
+
+            UpdateCounter();
+        };
+
+        _tasks.Add(entry);
+        TasksPanel.Children.Add(row);
 
         TaskInput.Text = "";
-    }
 
-    private void DeleteTask_Click(object? sender, RoutedEventArgs e)
-    {
-        if (TasksList.SelectedItem is TaskItem selectedTask)
-        {
-            _tasks.Remove(selectedTask);
-        }
+        UpdateCounter();
     }
 
     private void UpdateCounter()
     {
         int count = _tasks.Count(task => !task.IsCompleted);
 
-        CounterText.Text = $"Невиконаних завдань: {count}";
+        CounterText.Text =
+            $"Невиконаних завдань: {count}";
     }
-}
 
-public class TaskItem : INotifyPropertyChanged
-{
-    private bool _isCompleted;
-
-    public string Title { get; }
-
-    public bool IsCompleted
+    private class TaskEntry
     {
-        get => _isCompleted;
-        set
+        public string Title { get; }
+
+        public bool IsCompleted { get; set; }
+
+        public TaskItemControl TaskControl { get; }
+
+        public TaskStatusBadge StatusBadge { get; }
+
+        public StackPanel Row { get; }
+
+        public TaskEntry(
+            string title,
+            TaskItemControl taskControl,
+            TaskStatusBadge statusBadge,
+            StackPanel row)
         {
-            if (_isCompleted != value)
-            {
-                _isCompleted = value;
-                OnPropertyChanged();
-            }
+            Title = title;
+            TaskControl = taskControl;
+            StatusBadge = statusBadge;
+            Row = row;
+            IsCompleted = false;
         }
-    }
-
-    public TaskItem(string title)
-    {
-        Title = title;
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    protected void OnPropertyChanged(
-        [CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(
-            this,
-            new PropertyChangedEventArgs(propertyName));
     }
 }

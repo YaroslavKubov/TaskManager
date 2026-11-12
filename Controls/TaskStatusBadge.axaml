@@ -1,0 +1,17 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TaskManager.Controls.TaskStatusBadge">
+
+    <Border x:Name="StatusBorder"
+            Background="#FFF0D0"
+            CornerRadius="12"
+            Padding="10,5">
+
+        <TextBlock x:Name="StatusText"
+                   Text="Не виконано"
+                   FontSize="12"
+                   FontWeight="SemiBold"
+                   Foreground="#805000"/>
+
+    </Border>
+</UserControl>
